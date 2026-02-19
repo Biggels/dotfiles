@@ -29,6 +29,8 @@
 (column-number-mode)                 ;; Show column number in the footer
 (setq visible-bell t)                ;; Flash screen instead of beeping on errors
 (add-to-list 'default-frame-alist '(fullscreen . maximized)) ;; Start maximized
+;; Make TAB act more like other editors
+;; (setq-default tab-always-indent 'complete)
 
 ;; 3. ESSENTIAL PACKAGES
 
@@ -212,3 +214,57 @@
           (lambda ()
             (when (bound-and-true-p eglot--managed-mode)
               (eglot-reconnect))))
+
+
+;; 13. HELP & ERROR CONFIGURATION (Restored to Standard)
+
+;; A. ELDOC (The Info Engine)
+(use-package eldoc
+  :init
+  (global-eldoc-mode)
+  :config
+  ;; CRITICAL: This tells Emacs to print BOTH the function signature
+  ;; AND the error message to the bottom line at the same time.
+  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+  
+  ;; Show it instantly (no lag)
+  (setq eldoc-idle-delay 0.1))
+
+;; B. ERROR NAVIGATION (Standard Flymake)
+;; We don't need timers or popups. Standard Flymake automatically 
+;; prints the error to the bottom line when you jump to it.
+
+;; M-n: Jump to next error
+(global-set-key (kbd "M-n") 'flymake-goto-next-error)
+
+;; M-p: Jump to previous error
+(global-set-key (kbd "M-p") 'flymake-goto-prev-error)
+
+;; C. LIST ERRORS
+;; List all errors in the buffer (using Consult for a nice list)
+(global-set-key (kbd "C-c ! l") 'consult-flymake)
+
+;; 16. TERMINAL (Vterm)
+
+;; Use 'vterm' (a compiled terminal) for the best performance
+(use-package vterm
+  :commands vterm
+  :config
+  (setq vterm-max-scrollback 10000))
+
+;; Toggle Vterm at the bottom with Ctrl+` (like VS Code)
+(use-package vterm-toggle
+  :bind ("C-`" . vterm-toggle)
+  :custom
+  (vterm-toggle-fullscreen-p nil)
+  (vterm-toggle-scope 'project)
+  :config
+  ;; Force the toggle window to always appear at the bottom
+  (add-to-list 'display-buffer-alist
+               '((lambda (buffer-or-name _)
+                   (let ((buffer (get-buffer buffer-or-name)))
+                     (with-current-buffer buffer
+                       (or (equal major-mode 'vterm-mode)
+                           (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
+                 (display-buffer-reuse-window display-buffer-at-bottom)
+                 (window-height . 0.3))))

@@ -24,17 +24,32 @@ cd dotfiles
 
 ## Deploy user configuration
 
-Deploy one or more user packages from the repository root:
+Deploy user packages from the repository root:
 
 ```sh
-stow emacs
 stow claude ncspot
 ```
 
-Remove a package's links without deleting the files in this repository:
+Emacs writes generated state such as `elpa` and `eln-cache` alongside its
+configuration. Keep `~/.config/emacs` as a real directory and link only the
+tracked files into it. On a fresh installation, create that directory before
+running Stow:
 
 ```sh
-stow --delete emacs
+mkdir -p ~/.config/emacs
+stow --no-folding emacs
+```
+
+Using `--no-folding` prevents Stow from replacing the entire
+`~/.config/emacs` directory with a symlink into this repository, so files Emacs
+creates remain outside the repository. The generated directories are also
+listed in `.gitignore` as a safeguard.
+
+Remove a package's links without deleting the files in this repository. Use
+`--no-folding` for Emacs for the same reason:
+
+```sh
+stow --delete --no-folding emacs
 ```
 
 ## Deploy the NixOS configuration

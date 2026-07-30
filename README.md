@@ -1,12 +1,54 @@
 # dotfiles
-## Deployment
-```
+
+Configuration for my single NixOS desktop. GNU Stow deploys the files from this
+repository to their expected locations, while NixOS remains responsible for
+building and activating the operating-system configuration.
+
+## Stow packages
+
+- `claude` deploys `~/.claude/CLAUDE.md`.
+- `emacs` deploys `~/.config/emacs/init.el`.
+- `ncspot` deploys `~/.config/ncspot/config.toml`.
+- `nixos` deploys the NixOS configuration to `/etc/nixos`.
+
+## Clone
+
+Clone the repository directly under the home directory so Stow's default target
+is the home directory:
+
+```sh
 cd ~
-git clone https://github.com/Biggels/dotfiles.git
+git clone git@github.com:Biggels/dotfiles.git
 cd dotfiles
 ```
-Make sure GNU Stow is installed, then use `stow` and the name of one of the program subfolders. For example, `stow emacs` will install/symlink everything underneath the `emacs` subfolder. By default it will install into the parent directory of where the `stow` command was run, in other words the home folder in our case. So for programs where you want to install the config files elsewhere, like Nix, you need to set the `--target` directory. So for Nix, `stow -t /etc/nixos nix`.
 
-[This](https://brandon.invergo.net/news/2012-05-26-using-gnu-stow-to-manage-your-dotfiles.html) article is a good overview of this approach, including a nice directory diagram explaining where things go when you `stow` them.
+## Deploy user configuration
 
-Note: I have since moved to managing nix in its [own repo](https://github.com/Biggels/nix-config.git). And I will probably manage the dotfiles through that with Home Manager as well eventually. So this repo will probably get out of date.
+Deploy one or more user packages from the repository root:
+
+```sh
+stow emacs
+stow claude ncspot
+```
+
+Remove a package's links without deleting the files in this repository:
+
+```sh
+stow --delete emacs
+```
+
+## Deploy the NixOS configuration
+
+The NixOS package uses a different target:
+
+```sh
+sudo stow --dir="$HOME/dotfiles" --target=/etc/nixos nixos
+```
+
+Stow will refuse to overwrite existing regular files. Read
+[`nixos/README.md`](nixos/README.md) before the first deployment for the safe
+installation and migration sequence.
+
+Once deployed, the files under `/etc/nixos` are symlinks into this repository.
+Editing the tracked files therefore edits the active source configuration; a
+`nixos-rebuild` is still required to build and activate the change.
